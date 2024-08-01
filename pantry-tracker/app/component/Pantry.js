@@ -24,6 +24,7 @@ export default function Pantry() {
 
   const [itemName, setItemName] = useState('')
 
+
   // editing an item name.
   const [oldName, setOldName] = useState('')
   const [newName, setNewName] = useState('')
@@ -36,7 +37,7 @@ export default function Pantry() {
   const handleEditOpen = () => setEditOpen(true);
   const handleEditClose = () => setEditOpen(false);
 
-  const updatePantry = async() => {
+  const getCurrPantry = async() => {
     const snapshot = query(collection(firestore, 'Items'))
     const docs = await getDocs(snapshot)
     const pantryList = [] 
@@ -44,7 +45,13 @@ export default function Pantry() {
       pantryList.push({itemNm:doc.id,quantity: doc.data()["quantity"]})
     });
     console.log(pantryList)
-    setPantry(pantryList)
+    return pantryList
+  }
+
+  const updatePantry = async() => {
+    const pantryItems = await getCurrPantry();
+    console.log(pantryItems)
+    setPantry(pantryItems)
   }
 
   const addItem = async(item) => {
@@ -58,7 +65,6 @@ export default function Pantry() {
       await setDoc(docRef, {quantity:1})
     }
     updatePantry();
-    console.log(docRef)
   }
 
   const deleteItem = async(item) => {
@@ -72,6 +78,19 @@ export default function Pantry() {
       await setDoc(docRef, {quantity:currQuantity-1}, {merge:true})
     }
     updatePantry()  
+  }
+
+  const searchItem = async(searchValue) => {
+      const lowerCaseSearch = searchValue.toLowerCase();
+      const pantryItems = await getCurrPantry()
+      const matchSearch = []
+      pantryItems.forEach((item) => {
+        const name = item.itemNm;
+        if(name.toLowerCase().startsWith(lowerCaseSearch)){
+          matchSearch.push(item)
+        }
+      })
+      setPantry(matchSearch)
   }
 
   const BootstrapTooltip = styled(({ className, ...props }) => (
@@ -90,10 +109,12 @@ export default function Pantry() {
     deleteItem(oldName)
     addItem(newName)
   }
+
   useEffect(() => {
     updatePantry()
     // console.log(pantry)
   }, [])
+
   return (
     <Box
       height="100vh"
@@ -116,7 +137,7 @@ export default function Pantry() {
             Add Items
           </Typography>
           <Box display={"flex"} flexDirection={"row"} justifyContent={"space-between"}>
-            <TextField id="outlined-basic" label="Enter item" variant="outlined" value={itemName} onChange= {(e) => setItemName(e.target.value)}/>
+            <TextField id="outlined-basic" label="Enter item" variant="outlined" value={itemName} onChange= {(e) => {setItemName(e.target.value)}}/>
             <Button variant="outlined" 
               onClick={() => {
               addItem(itemName);
@@ -140,7 +161,7 @@ export default function Pantry() {
             Edit Item
           </Typography>
           <Box display={"flex"} flexDirection={"row"} justifyContent={"space-between"}>
-            <TextField id="outlined-basic" variant="outlined" value={newName} onChange= {(e) => setNewName(e.target.value)}/>
+            <TextField id="outlined-basic" variant="outlined" value={newName} onChange= {(e) => {setNewName(e.target.value)}}/>
             <Button variant="outlined" 
               onClick={() => {
               editItem(oldName, newName);
@@ -155,6 +176,17 @@ export default function Pantry() {
         <Box width="100%">
           <Typography variant="h2" bgcolor={"#ADD8E6"} textAlign={"center"} marginY={"10px"}>My Pantry Items</Typography>
         </Box>
+        
+        <Stack 
+        direction={{ xs: 'column', md: 'row' }} 
+        spacing={{xs:2, md:10}} // Space
+        alignItems="center"
+        justifyContent={"center"}
+        margin={2}
+        >      
+          <TextField id="outlined-basic" label="Search" variant="outlined" onChange={(e) => {searchItem(e.target.value)}}/>
+          <Button variant="contained" onClick={handleOpen}>Add item</Button>
+        </Stack>
         <Stack width="100%" height="100vh" spacing={2} overflow={'auto'}>
           {pantry.map(({itemNm, quantity},i) =>{
             const name = itemNm.charAt(0).toUpperCase() + itemNm.slice(1);
@@ -163,15 +195,21 @@ export default function Pantry() {
               width="100%"
               height="auto"
               display={"flex"}
-              justifyContent={"space-between"}
+              justifyContent={"space-evenly"}
               alignItems={"center"}
               bgcolor={"#f0f0f0"}
               padding={5}>
-                <Typography variant="h4" textAlign={"center"} style={{ flex: '0 0 75%', textAlign: 'center' }}>{name}</Typography> 
+                <Typography variant="h4" textAlign={"center"} style={{ flex: '0 0 50%', textAlign: 'center' }}>{name}</Typography> 
                 {/* setting new name aswell, because the textfield in the modal is a controlled component and value has to be used */}
-                <BootstrapTooltip title={"Change item name"}><Button  variant="contained" onClick={() => {handleEditOpen(); setOldName(name); setNewName(name)}}>Edit</Button></BootstrapTooltip>
-                <BootstrapTooltip title={"Add item to grocery list"}><Button  color="warning" variant="contained" onClick={() => deleteItem(itemNm)}>Restock</Button></BootstrapTooltip>
-                <BootstrapTooltip title={"Item finished and no plan of buying more for now"}><Button color="error" variant="contained" onClick={() => deleteItem(itemNm)}>Remove</Button></BootstrapTooltip>
+                <Stack 
+                  direction={{ xs: 'column', md: 'row' }} 
+                  spacing={2} // Space between buttons
+                  alignItems="center"
+                >
+                  <BootstrapTooltip title={"Change item name"}><Button  variant="contained" onClick={() => {handleEditOpen(); setOldName(name); setNewName(name)}}>Edit</Button></BootstrapTooltip>
+                  <BootstrapTooltip title={"Add item to grocery list"}><Button  color="warning" variant="contained" onClick={() => deleteItem(itemNm)}>Restock</Button></BootstrapTooltip>
+                  <BootstrapTooltip title={"Item finished and no plan of buying more for now"}><Button color="error" variant="contained" onClick={() => deleteItem(itemNm)}>Remove</Button></BootstrapTooltip>
+                </Stack>
             </Box>)}
           )}
         </Stack>
@@ -180,4 +218,3 @@ export default function Pantry() {
   );
 }
 
-{/* <Button variant="contained" onClick={handleOpen}>Add</Button> */}
