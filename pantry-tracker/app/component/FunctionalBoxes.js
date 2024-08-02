@@ -40,6 +40,10 @@ export default function FunctionalBoxes(){
     router.push("./component")
   }
 
+  const visitGrocery = () =>{
+    router.push("/grocery")
+  }
+
     return (
     <Box sx={{ flexGrow: 1 }}>
       <Grid container spacing={2}>
@@ -47,7 +51,7 @@ export default function FunctionalBoxes(){
           <Item sx={hover} onClick={visitPantry}>My Pantry Items</Item>
         </Grid>
         <Grid item xs={6}>
-          <Item sx={hover}>Grocery List</Item>
+          <Item sx={hover} onClick={visitGrocery}>Grocery List</Item>
         </Grid>
       </Grid>
     </Box>

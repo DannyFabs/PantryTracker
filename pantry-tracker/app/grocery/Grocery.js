@@ -1,12 +1,10 @@
 "use client"// client component
 import { Box, Stack,Typography,Button, Modal, TextField,Tooltip, tooltipClasses, styled } from "@mui/material";
-import { Home } from "@mui/icons-material";
+import { Help } from "@mui/icons-material";
 import { firestore } from "../firebase.js";
 import {collection, doc, getDocs,query,setDoc, deleteDoc, getDoc} from 'firebase/firestore'
 import React, {useEffect, useState} from 'react';
 import reactDom from "react-dom";
-import { useRouter } from "next/navigation";
-
 
 const style = {
   position: 'absolute',
@@ -21,15 +19,7 @@ const style = {
   gap:2
 };
 
-export default function Pantry() {
-
-  const router = useRouter()
-
-  const visitHome = () =>{
-    console.log("clicked")
-    router.push("/")
-  }
-
+export default function Grocery() {
   const [pantry, setPantry] = useState([])
 
   const [itemName, setItemName] = useState('')
@@ -48,11 +38,11 @@ export default function Pantry() {
   const handleEditClose = () => setEditOpen(false);
 
   const getCurrPantry = async() => {
-    const snapshot = query(collection(firestore, 'Items'))
+    const snapshot = query(collection(firestore, 'Grocery'))
     const docs = await getDocs(snapshot)
     const pantryList = [] 
     docs.forEach((doc) => {
-      pantryList.push(doc.id)
+      pantryList.push({itemNm:doc.id,quantity: doc.data()["quantity"]})
     });
     console.log(pantryList)
     return pantryList
@@ -65,23 +55,28 @@ export default function Pantry() {
   }
 
   const addItem = async(item) => {
-    console.log(item)
     const itemLower = item.toLowerCase()
-    const docRef = doc(firestore, 'Items',itemLower)
+    const docRef = doc(firestore, "Grocery",itemLower)
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
-      alert("This item already exist.")
+      const currQuantity = docSnap.data()["quantity"]
+      await setDoc(docRef, {quantity:currQuantity+1}, {merge:true})
     } else {
-      await setDoc(docRef, {})
+      await setDoc(docRef, {quantity:1})
     }
     updatePantry();
   }
 
   const deleteItem = async(item) => {
-    const itemLower = item.toLowerCase();
-    const docRef = doc(firestore, "Items", itemLower)
+    const docRef = doc(firestore, "Grocery", item)
     const docSnap = await getDoc(docRef);
-    await deleteDoc(docRef)
+    const currQuantity = docSnap.data()["quantity"]
+    if(currQuantity == 1){
+      await deleteDoc(docRef)
+    }
+    else{
+      await setDoc(docRef, {quantity:currQuantity-1}, {merge:true})
+    }
     updatePantry()  
   }
 
@@ -98,16 +93,7 @@ export default function Pantry() {
       setPantry(matchSearch)
   }
 
-  const restockItem = async(item) => {
-    const itemLower = item.toLowerCase()
-    const docRef = doc(firestore, 'Grocery',itemLower)
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-      alert('Item already exists in grocery list.')
-    } else {
-      await setDoc(docRef)
-    }
-  }
+
 
   const BootstrapTooltip = styled(({ className, ...props }) => (
     <Tooltip {...props} arrow classes={{ popper: className }} />
@@ -121,12 +107,14 @@ export default function Pantry() {
   }));
 
   const editItem = async(oldName, newName) => {
+    console.log(oldName, newName)
     deleteItem(oldName)
     addItem(newName)
   }
 
   useEffect(() => {
     updatePantry()
+    // console.log(pantry)
   }, [])
 
   return (
@@ -134,6 +122,9 @@ export default function Pantry() {
       height="100vh"
       width= "100%"
       display={"flex"}
+      // alignItems={"center"}
+      // justifyContent={"center"}
+      // flexDirection={"column"}
       gap={1}
       
     >
@@ -159,35 +150,11 @@ export default function Pantry() {
           </Box>
         </Box>
       </Modal>
-      
-      {/* edit modal */}
-      <Modal
-        open={editOpen}
-        onClose={handleEditClose}
-        aria-labelledby="modal-modal-title"
-        aria-describedby="modal-modal-description"
-      >
-        <Box sx={style}>
-          <Typography id="modal-modal-title" variant="h6" component="h2">
-            Edit Item
-          </Typography>
-          <Box display={"flex"} flexDirection={"row"} justifyContent={"space-between"}>
-            <TextField id="outlined-basic" variant="outlined" value={newName} onChange= {(e) => {setNewName(e.target.value)}}/>
-            <Button variant="outlined" 
-              onClick={() => {
-              editItem(oldName, newName);
-              handleEditClose()
-               }}>Edit
-              </Button>
-          </Box>
-        </Box>
-      </Modal>
       <Box
         width= "100%">
-        <Stack width="100%" direction={"row"} spacing={2} alignItems="center" justify-content="space-between"  bgcolor={"#ADD8E6"}>
-          <Home fontSize="large" onClick={visitHome} />
-          <Typography variant="h2" bgcolor={"#ADD8E6"} textAlign={"center"} marginY={"5px"} flexGrow={1}>My Pantry Items</Typography>
-        </Stack>
+        <Box width="100%">
+          <Typography variant="h2" bgcolor={"#ADD8E6"} textAlign={"center"} marginY={"10px"}>My Grocery List</Typography>
+        </Box>
         
         <Stack 
         direction={{ xs: 'column', md: 'row' }} 
@@ -198,12 +165,14 @@ export default function Pantry() {
         >      
           <TextField id="outlined-basic" label="Search" variant="outlined" onChange={(e) => {searchItem(e.target.value)}}/>
           <Button variant="contained" onClick={handleOpen}>Add item</Button>
+          <Button variant="contained" onClick={handleOpen}>Shopping Mode</Button>
+          <Button variant="contained" onClick={handleOpen}>Finish Shopping</Button>
         </Stack>
         <Stack width="100%" height="100vh" spacing={2} overflow={'auto'}>
-          {pantry.map(itemNm =>{
+          {pantry.map(({itemNm, quantity},i) =>{
             const name = itemNm.charAt(0).toUpperCase() + itemNm.slice(1);
             return (<Box 
-              key={itemNm}
+              key={i}
               width="100%"
               height="auto"
               display={"flex"}
@@ -219,7 +188,6 @@ export default function Pantry() {
                   alignItems="center"
                 >
                   <BootstrapTooltip title={"Change item name"}><Button  variant="contained" onClick={() => {handleEditOpen(); setOldName(name); setNewName(name)}}>Edit</Button></BootstrapTooltip>
-                  <BootstrapTooltip title={"Add item to grocery list"}><Button  color="warning" variant="contained" onClick={() => restockItem(itemNm)}>Restock</Button></BootstrapTooltip>
                   <BootstrapTooltip title={"Item finished and no plan of buying more for now"}><Button color="error" variant="contained" onClick={() => deleteItem(itemNm)}>Remove</Button></BootstrapTooltip>
                 </Stack>
             </Box>)}
