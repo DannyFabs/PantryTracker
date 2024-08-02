@@ -105,8 +105,9 @@ export default function Pantry() {
     if (docSnap.exists()) {
       alert('Item already exists in grocery list.')
     } else {
-      await setDoc(docRef)
+      await setDoc(docRef, {})
     }
+    deleteItem(item)
   }
 
   const BootstrapTooltip = styled(({ className, ...props }) => (

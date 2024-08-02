@@ -20,7 +20,7 @@ const style = {
 };
 
 export default function Grocery() {
-  const [pantry, setPantry] = useState([])
+  const [grocery, setGrocery] = useState([])
 
   const [itemName, setItemName] = useState('')
 
@@ -37,21 +37,19 @@ export default function Grocery() {
   const handleEditOpen = () => setEditOpen(true);
   const handleEditClose = () => setEditOpen(false);
 
-  const getCurrPantry = async() => {
+  const getCurrGrocery = async() => {
     const snapshot = query(collection(firestore, 'Grocery'))
     const docs = await getDocs(snapshot)
     const pantryList = [] 
     docs.forEach((doc) => {
-      pantryList.push({itemNm:doc.id,quantity: doc.data()["quantity"]})
+      pantryList.push(doc.id)
     });
-    console.log(pantryList)
     return pantryList
   }
 
-  const updatePantry = async() => {
-    const pantryItems = await getCurrPantry();
-    console.log(pantryItems)
-    setPantry(pantryItems)
+  const updateGrocery = async() => {
+    const pantryItems = await getCurrGrocery();
+    setGrocery(pantryItems)
   }
 
   const addItem = async(item) => {
@@ -59,30 +57,24 @@ export default function Grocery() {
     const docRef = doc(firestore, "Grocery",itemLower)
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
-      const currQuantity = docSnap.data()["quantity"]
-      await setDoc(docRef, {quantity:currQuantity+1}, {merge:true})
+        alert("Item with this name already exist")
     } else {
-      await setDoc(docRef, {quantity:1})
+      await setDoc(docRef, {})
     }
-    updatePantry();
+    updateGrocery();
   }
 
   const deleteItem = async(item) => {
-    const docRef = doc(firestore, "Grocery", item)
+    const itemLower = item.toLowerCase()
+    const docRef = doc(firestore, "Grocery",itemLower)
     const docSnap = await getDoc(docRef);
-    const currQuantity = docSnap.data()["quantity"]
-    if(currQuantity == 1){
-      await deleteDoc(docRef)
-    }
-    else{
-      await setDoc(docRef, {quantity:currQuantity-1}, {merge:true})
-    }
-    updatePantry()  
+    await deleteDoc(docRef)
+    updateGrocery()  
   }
 
   const searchItem = async(searchValue) => {
       const lowerCaseSearch = searchValue.toLowerCase();
-      const pantryItems = await getCurrPantry()
+      const pantryItems = await getCurrGrocery()
       const matchSearch = []
       pantryItems.forEach((item) => {
         const name = item.itemNm;
@@ -90,7 +82,7 @@ export default function Grocery() {
           matchSearch.push(item)
         }
       })
-      setPantry(matchSearch)
+      setGrocery(matchSearch)
   }
 
 
@@ -107,14 +99,24 @@ export default function Grocery() {
   }));
 
   const editItem = async(oldName, newName) => {
-    console.log(oldName, newName)
     deleteItem(oldName)
     addItem(newName)
   }
 
+  const handlePurchase = async(item) => {
+    const itemLower = item.toLowerCase()
+    const docRef = doc(firestore, 'Items',itemLower)
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      alert('Item already exists in grocery list.')
+    } else {
+      await setDoc(docRef, {})
+    }
+    deleteItem(item)
+  }
+
   useEffect(() => {
-    updatePantry()
-    // console.log(pantry)
+    updateGrocery()
   }, [])
 
   return (
@@ -122,18 +124,16 @@ export default function Grocery() {
       height="100vh"
       width= "100%"
       display={"flex"}
-      // alignItems={"center"}
-      // justifyContent={"center"}
-      // flexDirection={"column"}
       gap={1}
       
     >
-      <Modal
-        open={open}
-        onClose={handleClose}
-        aria-labelledby="modal-modal-title"
-        aria-describedby="modal-modal-description"
-      >
+    {/*Add item modal */}
+    <Modal
+    open={open}
+    onClose={handleClose}
+    aria-labelledby="modal-modal-title"
+    aria-describedby="modal-modal-description"
+    >
         <Box sx={style}>
           <Typography id="modal-modal-title" variant="h6" component="h2">
             Add Items
@@ -146,6 +146,29 @@ export default function Grocery() {
               handleClose();
               setItemName('');
                }}>Add
+              </Button>
+          </Box>
+        </Box>
+      </Modal>
+
+    {/* edit modal */}
+    <Modal
+        open={editOpen}
+        onClose={handleEditClose}
+        aria-labelledby="modal-modal-title"
+        aria-describedby="modal-modal-description"
+      >
+        <Box sx={style}>
+          <Typography id="modal-modal-title" variant="h6" component="h2">
+            Edit Item
+          </Typography>
+          <Box display={"flex"} flexDirection={"row"} justifyContent={"space-between"}>
+            <TextField id="outlined-basic" variant="outlined" value={newName} onChange= {(e) => {setNewName(e.target.value)}}/>
+            <Button variant="outlined" 
+              onClick={() => {
+              editItem(oldName, newName);
+              handleEditClose()
+               }}>Edit
               </Button>
           </Box>
         </Box>
@@ -165,14 +188,12 @@ export default function Grocery() {
         >      
           <TextField id="outlined-basic" label="Search" variant="outlined" onChange={(e) => {searchItem(e.target.value)}}/>
           <Button variant="contained" onClick={handleOpen}>Add item</Button>
-          <Button variant="contained" onClick={handleOpen}>Shopping Mode</Button>
-          <Button variant="contained" onClick={handleOpen}>Finish Shopping</Button>
         </Stack>
         <Stack width="100%" height="100vh" spacing={2} overflow={'auto'}>
-          {pantry.map(({itemNm, quantity},i) =>{
+          {grocery.map(itemNm =>{
             const name = itemNm.charAt(0).toUpperCase() + itemNm.slice(1);
             return (<Box 
-              key={i}
+              key={itemNm}
               width="100%"
               height="auto"
               display={"flex"}
@@ -189,6 +210,8 @@ export default function Grocery() {
                 >
                   <BootstrapTooltip title={"Change item name"}><Button  variant="contained" onClick={() => {handleEditOpen(); setOldName(name); setNewName(name)}}>Edit</Button></BootstrapTooltip>
                   <BootstrapTooltip title={"Item finished and no plan of buying more for now"}><Button color="error" variant="contained" onClick={() => deleteItem(itemNm)}>Remove</Button></BootstrapTooltip>
+                  <BootstrapTooltip title={"Item purchased and should be added back to pantry."}><Button color="success" variant="contained" onClick={() => handlePurchase(itemNm)}>Purchased</Button></BootstrapTooltip>
+
                 </Stack>
             </Box>)}
           )}
