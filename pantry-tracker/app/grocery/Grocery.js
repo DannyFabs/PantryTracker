@@ -6,6 +6,8 @@ import { Home } from "@mui/icons-material";
 import {collection, doc, getDocs,query,setDoc, deleteDoc, getDoc, updateDoc,arrayUnion,arrayRemove} from 'firebase/firestore'
 import React, {useEffect, useState} from 'react';
 import Cookies from "js-cookie";
+import { useRouter } from "next/navigation";
+
 
 import reactDom from "react-dom";
 
@@ -23,6 +25,7 @@ const style = {
 };
 
 export default function Grocery() {
+  const router = useRouter()
 
   const visitHome = () =>{
     console.log("clicked")

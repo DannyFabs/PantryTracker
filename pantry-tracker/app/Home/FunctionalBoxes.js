@@ -215,7 +215,7 @@ export default function FunctionalBoxes(){
                 const name = pantryNm.split("-")[0]
 
                 return(
-                  <Grid key={name}containter rowspacing={1} marginBottom={"40px"}>
+                  <Grid key={name} container rowspacing={1} marginBottom={"40px"}>
                     <Grid item md={6} xs={12} >
                       <Item sx={hover} onClick={() =>{visitPantry(name)}}>{name} Pantry</Item>
                     </Grid>
