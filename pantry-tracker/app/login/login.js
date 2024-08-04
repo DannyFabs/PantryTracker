@@ -26,7 +26,6 @@ export default function Login(){
           const user = userCredential.user;
           console.log(user)
 
-          Cookies.set('userEmail', user.email)
           router.push('/Home')
         })
         .catch((error) => {

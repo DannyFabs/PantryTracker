@@ -20,7 +20,8 @@ export default function Login(){
     const router = useRouter();
 
     const addNewUser = async(user) => {
-        const ref = doc(firestore, "Users", user.uid).withConverter(userConverter)
+        const ref = doc(firestore, "Users", email).withConverter(userConverter)
+        // TODO: add a check to see if the user exist.
         await setDoc(ref, new User(email,[],[],[],[]))
         console.log("done???")
     }

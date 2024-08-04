@@ -2,7 +2,7 @@
 import { Box, Stack,Typography,Button, Modal, TextField,Tooltip, tooltipClasses, styled } from "@mui/material";
 import { Home } from "@mui/icons-material";
 import { firestore,auth } from "../firebase.js";
-import {collection, doc, getDocs,query,setDoc, deleteDoc, getDoc} from 'firebase/firestore'
+import {collection, doc, getDocs,query,setDoc, deleteDoc, getDoc, updateDoc,arrayUnion,arrayRemove} from 'firebase/firestore'
 import React, {useEffect, useState} from 'react';
 import reactDom from "react-dom";
 import { useRouter } from "next/navigation";
@@ -37,6 +37,9 @@ export default function Pantry() {
 
   const [itemName, setItemName] = useState('')
 
+  const user = auth.currentUser
+  const pantryName = Cookies.get('currentPantry')+ "-" +  user.email
+
 
   // editing an item name.
   const [oldName, setOldName] = useState('')
@@ -51,14 +54,17 @@ export default function Pantry() {
   const handleEditClose = () => setEditOpen(false);
 
   const getCurrPantry = async() => {
-    const snapshot = query(collection(firestore, 'af@gmail.com/PersonalPantries/KitchenPantry'))
-    const docs = await getDocs(snapshot)
-    const pantryList = [] 
-    docs.forEach((doc) => {
-      pantryList.push(doc.id)
-    });
-    console.log(pantryList)
-    return pantryList
+    // const snapshot = query(collection(firestore, 'af@gmail.com/PersonalPantries/KitchenPantry'))
+    // const docs = await getDocs(snapshot)
+    const pantryRef = doc(firestore, 'Pantry', pantryName)
+    const pantryDocSnapshot = await getDoc(pantryRef)
+    const pantryItems = pantryDocSnapshot.data()['items']
+    // const pantryList = [] 
+    // docs.forEach((doc) => {
+    //   pantryList.push(doc.id)
+    // });
+    // console.log(pantryList)
+    return pantryItems
   }
 
   const updatePantry = async() => {
@@ -69,22 +75,45 @@ export default function Pantry() {
 
   const addItem = async(item) => {
     console.log(item)
+    const pantryRef = doc(firestore, 'Pantry', pantryName)
+    const pantryDocSnapshot = await getDoc(pantryRef)
+    const pantryItems = pantryDocSnapshot.data()['items']
+
     const itemLower = item.toLowerCase()
-    const docRef = doc(firestore, 'Items',itemLower)
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-      alert("This item already exist.")
-    } else {
-      await setDoc(docRef, {})
+    let exist = false
+    pantryItems.forEach((item) => {
+      if(itemLower == item){
+        alert("This item already exist.")
+        exist = true
+      }
+    })
+    if(!exist){
+      await updateDoc(pantryRef, {
+        items: arrayUnion(itemLower)
+      })
     }
+
+    // if (docSnap.exists()) {
+    //   alert("This item already exist.")
+    // } else {
+    //   await setDoc(docRef, {})
+    // }
     updatePantry();
   }
 
   const deleteItem = async(item) => {
+
+    const pantryRef = doc(firestore, 'Pantry', pantryName)
     const itemLower = item.toLowerCase();
-    const docRef = doc(firestore, "Items", itemLower)
-    const docSnap = await getDoc(docRef);
-    await deleteDoc(docRef)
+
+
+    // const docRef = doc(firestore, "Items", itemLower)
+    // const docSnap = await getDoc(docRef);
+    // await deleteDoc(docRef)
+    await updateDoc(pantryRef, {
+      items: arrayRemove(itemLower)
+    })
+
     updatePantry()  
   }
 
@@ -93,7 +122,7 @@ export default function Pantry() {
       const pantryItems = await getCurrPantry()
       const matchSearch = []
       pantryItems.forEach((item) => {
-        const name = item.itemNm;
+        const name = item;
         if(name.toLowerCase().startsWith(lowerCaseSearch)){
           matchSearch.push(item)
         }
@@ -103,12 +132,25 @@ export default function Pantry() {
 
   const restockItem = async(item) => {
     const itemLower = item.toLowerCase()
-    const docRef = doc(firestore, 'Grocery',itemLower)
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-      alert('Item already exists in grocery list.')
-    } else {
-      await setDoc(docRef, {})
+
+    // in the grocery collection
+    // NOTE: grocerlist name is the same as the pantry list name
+    const groceryDocRef = doc(firestore, 'Grocery',pantryName)
+
+    const groceryDocSnapshot = await getDoc(groceryDocRef)
+    const groceryItems = groceryDocSnapshot.data()['items']
+
+    let exist = false
+    groceryItems.forEach((item) => {
+      if(itemLower == item){
+        alert("This item already exist.")
+        exist = true
+      }
+    })
+    if(!exist){
+      await updateDoc(groceryDocRef, {
+        items: arrayUnion(itemLower)
+      })
     }
     deleteItem(item)
   }
