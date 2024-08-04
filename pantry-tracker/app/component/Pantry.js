@@ -30,7 +30,7 @@ export default function Pantry() {
 
   const visitHome = () =>{
     console.log("clicked")
-    router.push("/")
+    router.push("/Home")
   }
 
   const [pantry, setPantry] = useState([])

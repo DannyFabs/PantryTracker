@@ -1,9 +1,12 @@
 "use client"// client component
 import { Box, Stack,Typography,Button, Modal, TextField,Tooltip, tooltipClasses, styled } from "@mui/material";
 import { Help } from "@mui/icons-material";
-import { firestore } from "../firebase.js";
-import {collection, doc, getDocs,query,setDoc, deleteDoc, getDoc} from 'firebase/firestore'
+import { auth, firestore } from "../firebase.js";
+import { Home } from "@mui/icons-material";
+import {collection, doc, getDocs,query,setDoc, deleteDoc, getDoc, updateDoc,arrayUnion,arrayRemove} from 'firebase/firestore'
 import React, {useEffect, useState} from 'react';
+import Cookies from "js-cookie";
+
 import reactDom from "react-dom";
 
 const style = {
@@ -20,10 +23,19 @@ const style = {
 };
 
 export default function Grocery() {
+
+  const visitHome = () =>{
+    console.log("clicked")
+    router.push("/Home")
+  }
+
+
   const [grocery, setGrocery] = useState([])
 
   const [itemName, setItemName] = useState('')
 
+  const user = auth.currentUser
+  const groceryListName = Cookies.get('currentGrocery')+ "-" +  user.email
 
   // editing an item name.
   const [oldName, setOldName] = useState('')
@@ -38,46 +50,78 @@ export default function Grocery() {
   const handleEditClose = () => setEditOpen(false);
 
   const getCurrGrocery = async() => {
-    const snapshot = query(collection(firestore, 'Grocery'))
-    const docs = await getDocs(snapshot)
-    const pantryList = [] 
-    docs.forEach((doc) => {
-      pantryList.push(doc.id)
-    });
-    return pantryList
+    // const snapshot = query(collection(firestore, 'Grocery'))
+    // const docs = await getDocs(snapshot)
+    // const pantryList = [] 
+    // docs.forEach((doc) => {
+    //   pantryList.push(doc.id)
+    // });
+    // return pantryList
+
+    const groceryRef = doc(firestore, 'Grocery', groceryListName)
+    const groceryDocSnapshot = await getDoc(groceryRef)
+    const groceryItems = groceryDocSnapshot.data()['items']
+
+    return groceryItems
   }
 
   const updateGrocery = async() => {
-    const pantryItems = await getCurrGrocery();
-    setGrocery(pantryItems)
+    const groceryItems = await getCurrGrocery();
+    setGrocery(groceryItems)
   }
 
   const addItem = async(item) => {
+    // const itemLower = item.toLowerCase()
+    // const docRef = doc(firestore, "Grocery",itemLower)
+    // const docSnap = await getDoc(docRef);
+    // if (docSnap.exists()) {
+    //     alert("Item with this name already exist")
+    // } else {
+    //   await setDoc(docRef, {})
+    // }
+    // updateGrocery();
+
+    const groceryRef = doc(firestore, 'Grocery', groceryListName)
+    const groceryDocSnapshot = await getDoc(groceryRef)
+    const groceryItems = groceryDocSnapshot.data()['items']
+
     const itemLower = item.toLowerCase()
-    const docRef = doc(firestore, "Grocery",itemLower)
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-        alert("Item with this name already exist")
-    } else {
-      await setDoc(docRef, {})
+    let exist = false
+    groceryItems.forEach((item) => {
+      if(itemLower == item){
+        alert("This item already exist.")
+        exist = true
+      }
+    })
+    if(!exist){
+      await updateDoc(groceryRef, {
+        items: arrayUnion(itemLower)
+      })
     }
     updateGrocery();
   }
 
   const deleteItem = async(item) => {
+    // const docRef = doc(firestore, "Grocery",itemLower)
+    // const docSnap = await getDoc(docRef);
+    // await deleteDoc(docRef)
+
+    const groceryRef = doc(firestore, 'Grocery', groceryListName)
     const itemLower = item.toLowerCase()
-    const docRef = doc(firestore, "Grocery",itemLower)
-    const docSnap = await getDoc(docRef);
-    await deleteDoc(docRef)
+
+    await updateDoc(groceryRef, {
+      items: arrayRemove(itemLower)
+    })
+
     updateGrocery()  
   }
 
   const searchItem = async(searchValue) => {
       const lowerCaseSearch = searchValue.toLowerCase();
-      const pantryItems = await getCurrGrocery()
+      const groceryItems = await getCurrGrocery()
       const matchSearch = []
-      pantryItems.forEach((item) => {
-        const name = item.itemNm;
+      groceryItems.forEach((item) => {
+        const name = item
         if(name.toLowerCase().startsWith(lowerCaseSearch)){
           matchSearch.push(item)
         }
@@ -105,13 +149,33 @@ export default function Grocery() {
 
   const handlePurchase = async(item) => {
     const itemLower = item.toLowerCase()
-    const docRef = doc(firestore, 'Items',itemLower)
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-      alert('Item already exists in grocery list.')
-    } else {
-      await setDoc(docRef, {})
+    // in the pantry collection
+    // NOTE: grocerlist name is the same as the pantry list name
+    const pantryDocRef = doc(firestore, 'Pantry',groceryListName)
+
+    const pantryDocSnapshot = await getDoc(pantryDocRef)
+    const pantryItems = pantryDocSnapshot.data()['items']
+
+    let exist = false
+    pantryItems.forEach((item) => {
+      if(itemLower == item){
+        alert("This item already exist.")
+        exist = true
+      }
+    })
+    if(!exist){
+      await updateDoc(pantryDocRef, {
+        items: arrayUnion(itemLower)
+      })
     }
+
+    // const docRef = doc(firestore, 'Items',itemLower)
+    // const docSnap = await getDoc(docRef);
+    // if (docSnap.exists()) {
+    //   alert('Item already exists in grocery list.')
+    // } else {
+    //   await setDoc(docRef, {})
+    // }
     deleteItem(item)
   }
 
@@ -176,7 +240,10 @@ export default function Grocery() {
       <Box
         width= "100%">
         <Box width="100%">
-          <Typography variant="h2" bgcolor={"#ADD8E6"} textAlign={"center"} marginY={"10px"}>My Grocery List</Typography>
+          <Stack width="100%" direction={"row"} spacing={2} alignItems="center" justify-content="space-between"  bgcolor={"#ADD8E6"}>
+            <Home fontSize="large" onClick={visitHome} />
+            <Typography variant="h2" bgcolor={"#ADD8E6"} textAlign={"center"} marginY={"5px"} flexGrow={1}>My Grocery List</Typography>
+          </Stack>
         </Box>
         
         <Stack 
