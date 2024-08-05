@@ -1,6 +1,6 @@
 "use client"// client component
 import { Box,Typography,Button, AppBar, IconButton, Toolbar } from "@mui/material";
-import React, {useEffect, useState} from 'react';
+import React from 'react';
 import reactDom from "react-dom";
 
 export default function Nav(){

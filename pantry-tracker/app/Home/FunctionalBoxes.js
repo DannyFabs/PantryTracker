@@ -7,7 +7,7 @@ import reactDom from "react-dom";
 import Cookies from "js-cookie";
 
 import { auth, firestore } from "../firebase";
-import {collection, doc, getDocs,query, getDoc,setDoc, updateDoc, arrayUnion} from 'firebase/firestore'
+import { doc, getDoc,setDoc, updateDoc, arrayUnion} from 'firebase/firestore'
 import { onAuthStateChanged } from "firebase/auth";
 
 
@@ -34,7 +34,6 @@ const gridItemStyle = {
     backgroundColor: '#f0f0f0',
     textAlign: 'center',
     border: '1px solid #ccc',
-    // margin: '5px 5px'
   };
 
 export default function FunctionalBoxes(){
@@ -44,8 +43,6 @@ export default function FunctionalBoxes(){
 
   const [personalPantry, setPersonalPantry] = useState([])
   const [sharedPantry, setSharedPantry] = useState([])
-
-  // const [personalGrocery, setPersonalGrocery] = useState([])
 
   const [open, setOpen] = React.useState(false);
   const handleOpen = () => setOpen(true);
@@ -296,8 +293,7 @@ export default function FunctionalBoxes(){
   
   
   // const isLoggedIn = () => {
-  //   const user = auth.currentUser
-  //   if(user){
+  //   if(currUser){
   //     return true
   //   }
   //   else{
@@ -306,28 +302,27 @@ export default function FunctionalBoxes(){
   // }
 
   useEffect(() => {
-    // if(!isLoggedIn()){
-    //   alert("Your user has been logged out please log in.")
-    //   Cookies.remove('userEmail')
-    //   router.push('/')
-    // }
     onAuthStateChanged(auth, (user) => {
       console.log("i think it runs")
       console.log(user)
       console.log(user.email)
       setUser(user)
     })
-
   }, [])
 
   useEffect(() => {
+    // if(!isLoggedIn()){
+    //   alert("Your user has been logged out please log in.")
+    //   Cookies.remove('userEmail')
+    //   router.push('/')
+    // }
     updatePersonalPantry()
     updateSharedPantry()
   }, [currUser])
 
   return (
     <Box sx={{ flexGrow: 1 }}>
-            {/* create modal */}
+            {/* create pantry modal */}
       <Modal
         open={open}
         onClose={handleClose}
@@ -350,6 +345,7 @@ export default function FunctionalBoxes(){
         </Box>
       </Modal>
 
+      {/* share pantry modal */}
       <Modal
         open={shareOpen}
         onClose={handleShareClose}

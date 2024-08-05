@@ -2,15 +2,11 @@
 import React, {useEffect, useState} from 'react';
 import reactDom from "react-dom";
 
-import { Box, Stack,Typography,Button, Modal, TextField,Tooltip, tooltipClasses, styled } from "@mui/material";
-import { Home } from "@mui/icons-material";
-import { firestore, auth } from "../firebase.js";
-import {collection, doc, getDocs,query,setDoc, deleteDoc, getDoc} from 'firebase/firestore'
+import { Box,Typography,Button, TextField} from "@mui/material";
+import { auth } from "../firebase.js";
 import { useRouter } from "next/navigation";
 
 import { signInWithEmailAndPassword} from "firebase/auth"
-
-import Cookies from 'js-cookie'
 
 export default function Login(){
 

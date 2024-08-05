@@ -2,14 +2,13 @@
 import { Box, Stack,Typography,Button, Modal, TextField,Tooltip, tooltipClasses, styled } from "@mui/material";
 import { Home } from "@mui/icons-material";
 import { firestore,auth } from "../firebase.js";
-import {collection, doc, getDocs,query,setDoc, deleteDoc, getDoc, updateDoc,arrayUnion,arrayRemove} from 'firebase/firestore'
+import { doc, getDoc, updateDoc,arrayUnion,arrayRemove} from 'firebase/firestore'
 import React, {useEffect, useState} from 'react';
 import reactDom from "react-dom";
 import { useRouter } from "next/navigation";
-
-import { onAuthStateChanged } from "firebase/auth";
-import { cookies } from "next/headers.js";
 import Cookies from "js-cookie";
+import { onAuthStateChanged } from "firebase/auth";
+
 
 const style = {
   position: 'absolute',
@@ -37,7 +36,8 @@ export default function Pantry() {
 
   const [itemName, setItemName] = useState('')
 
-  const user = auth.currentUser
+  const [currUser, setUser] = useState(null)
+
   // const pantryName = Cookies.get('currentPantry')+ "-" +  user.email
   const pantryName = Cookies.get('currentPantry')
 
@@ -172,24 +172,51 @@ export default function Pantry() {
     addItem(newName)
   }
 
-  const isLoggedIn = () => {
-      const user = auth.currentUser
-      if(user){
-        return true
-      }
-      else{
-        return false
-      }
-  }
+  // const isLoggedIn = () => {
+  //     const user = auth.currentUser
+  //     if(user){
+  //       return true
+  //     }
+  //     else{
+  //       return false
+  //     }
+  // }
+
+  // useEffect(() => {
+  //   if(!isLoggedIn()){
+  //     alert("Your user has been logged out please log in.")
+  //     Cookies.remove('userEmail')
+  //     router.push('/')
+  //   }
+  //   updatePantry()
+  // }, [])
+
+  // const isLoggedIn = () => {
+  //   if(currUser){
+  //     return true
+  //   }
+  //   else{
+  //     return false
+  //   }
+  // }
 
   useEffect(() => {
-    if(!isLoggedIn()){
-      alert("Your user has been logged out please log in.")
-      Cookies.remove('userEmail')
-      router.push('/')
-    }
-    updatePantry()
+    onAuthStateChanged(auth, (user) => {
+      console.log("i think it runs")
+      console.log(user)
+      console.log(user.email)
+      setUser(user)
+    })
   }, [])
+
+  useEffect(() => {
+    // if(!isLoggedIn()){
+    //   alert("Your user has been logged out please log in.")
+    //   Cookies.remove('userEmail')
+    //   router.push('/')
+    // }
+    updatePantry()
+  }, [currUser])
 
   return (
     <Box

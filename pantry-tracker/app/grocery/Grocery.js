@@ -3,10 +3,11 @@ import { Box, Stack,Typography,Button, Modal, TextField,Tooltip, tooltipClasses,
 import { Help } from "@mui/icons-material";
 import { auth, firestore } from "../firebase.js";
 import { Home } from "@mui/icons-material";
-import {collection, doc, getDocs,query,setDoc, deleteDoc, getDoc, updateDoc,arrayUnion,arrayRemove} from 'firebase/firestore'
+import { doc, getDoc, updateDoc,arrayUnion,arrayRemove} from 'firebase/firestore'
 import React, {useEffect, useState} from 'react';
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
+import { onAuthStateChanged } from "firebase/auth";
 
 
 import reactDom from "react-dom";
@@ -37,8 +38,12 @@ export default function Grocery() {
 
   const [itemName, setItemName] = useState('')
 
-  const user = auth.currentUser
-  const groceryListName = Cookies.get('currentGrocery')+ "-" +  user.email
+  const [currUser, setUser] = useState(null)
+
+
+  // const groceryListName = Cookies.get('currentGrocery')+ "-" +  user.email
+  const groceryListName = Cookies.get('currentPantry')
+
 
   // editing an item name.
   const [oldName, setOldName] = useState('')
@@ -182,9 +187,32 @@ export default function Grocery() {
     deleteItem(item)
   }
 
+  // const isLoggedIn = () => {
+  //   if(currUser){
+  //     return true
+  //   }
+  //   else{
+  //     return false
+  //   }
+  // }
+
   useEffect(() => {
-    updateGrocery()
+    onAuthStateChanged(auth, (user) => {
+      console.log("i think it runs")
+      console.log(user)
+      console.log(user.email)
+      setUser(user)
+    })
   }, [])
+
+  useEffect(() => {
+    // if(!isLoggedIn()){
+    //   alert("Your user has been logged out please log in.")
+    //   Cookies.remove('userEmail')
+    //   router.push('/')
+    // }
+    updateGrocery()
+  }, [currUser])
 
   return (
     <Box
