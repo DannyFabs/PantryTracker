@@ -48,7 +48,7 @@ export default function Login(){
             <Box display={"flex"}  flexDirection={"column"} justifyContent={"center"} alignItems={"center"} border={"2px solid grey"} sx={{margin:'auto', padding:'10px'}}>
                 <Typography variant='h4' sx={{margin:'5px'}}>Family Grocery Tracker</Typography>
                 <TextField id="outlined-basic" label="Email address" variant="outlined" sx={{margin:'5px'}} value={email} onChange={(e) => setEmail(e.target.value)} />
-                <TextField id="outlined-basic" label="Password" variant="outlined" sx={{margin:'5px'}} value={password} onChange={(e) => setPassword(e.target.value)} />
+                <TextField type='password' id="outlined-basic" label="Password" variant="outlined" sx={{margin:'5px'}} value={password} onChange={(e) => setPassword(e.target.value)} />
                 <Button variant="contained" sx={{margin:'5px'}} onClick={handleSignIn}>Sign In</Button>
                 <Button variant="text" sx={{margin:'5px'}} onClick={handleSignUp}>Sign Up</Button>
             </Box>
