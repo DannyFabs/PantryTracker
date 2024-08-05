@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation";
 import {createUserWithEmailAndPassword} from 'firebase/auth'
 
 
-import { User, user, userConverter } from '../objects/User.js';
+import { User, userConverter } from '../objects/User.js';
 
 export default function Login(){
 
@@ -23,7 +23,6 @@ export default function Login(){
         const ref = doc(firestore, "Users", email).withConverter(userConverter)
         // TODO: add a check to see if the user exist.
         await setDoc(ref, new User(email,[],[],[],[]))
-        console.log("done???")
     }
 
     const trySignUp = () => {
@@ -49,7 +48,6 @@ export default function Login(){
             alert("Please enter a valid email address and password")
         }
         trySignUp()
-        console.log(email)
     }
 
     return(

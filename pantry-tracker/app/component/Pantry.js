@@ -38,7 +38,8 @@ export default function Pantry() {
   const [itemName, setItemName] = useState('')
 
   const user = auth.currentUser
-  const pantryName = Cookies.get('currentPantry')+ "-" +  user.email
+  // const pantryName = Cookies.get('currentPantry')+ "-" +  user.email
+  const pantryName = Cookies.get('currentPantry')
 
 
   // editing an item name.

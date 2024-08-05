@@ -1,5 +1,5 @@
 "use client"// client component
-import { Box, Grid,Typography,Paper, Button, TextField, Modal} from "@mui/material";
+import { Box, Grid,Typography,Paper, Button, TextField, Modal, Stack} from "@mui/material";
 import { styled } from '@mui/material/styles';
 import React, {useEffect, useState} from 'react';
 import { useRouter } from "next/navigation";
@@ -8,6 +8,7 @@ import Cookies from "js-cookie";
 
 import { auth, firestore } from "../firebase";
 import {collection, doc, getDocs,query, getDoc,setDoc, updateDoc, arrayUnion} from 'firebase/firestore'
+import { onAuthStateChanged } from "firebase/auth";
 
 
 const Item = styled(Paper)(({ theme }) => ({
@@ -37,14 +38,26 @@ const gridItemStyle = {
   };
 
 export default function FunctionalBoxes(){
+
+  const [currUser, setUser] = useState(null)
+
+
   const [personalPantry, setPersonalPantry] = useState([])
+  const [sharedPantry, setSharedPantry] = useState([])
+
   // const [personalGrocery, setPersonalGrocery] = useState([])
 
   const [open, setOpen] = React.useState(false);
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
+  const [shareOpen, setShareOpen] = React.useState(false);
+  const handleShareOpen = () => setShareOpen(true);
+  const handleShareClose = () => setShareOpen(false);
+
   const [newName, setNewName] = useState('')
+  const [shareEmail, setShareEmail] = useState('')
+  const [sharePantry, setSharePantry] = useState('')
 
 
 
@@ -61,22 +74,54 @@ export default function FunctionalBoxes(){
   }
 
   const getPersonalPantry = async() =>{
-    const user = auth.currentUser
-    const mail = user.email
+    // const user = auth.currentUser
+    if(currUser){
+      const mail = currUser.email
 
-    const userRef = doc(firestore,'Users',mail)
-    const docSnap = await getDoc(userRef)
-    let pp = []
-    if(docSnap.exists()){
-      pp = docSnap.data()['pp']
-      console.log(pp)
+      const userRef = doc(firestore,'Users',mail)
+      const docSnap = await getDoc(userRef)
+      let pp = []
+      if(docSnap.exists()){
+        pp = docSnap.data()['pp']
+        console.log(pp)
+      }
+      else{
+        alert("Something went wrong. Please login and try again")
+      }
+      return pp
     }
     else{
-      alert("Something went wrong. Please login and try again")
+      return []
     }
-    return pp
+
   }
 
+  const getSharedPantry = async() =>{
+    // const user = auth.currentUser
+    if(currUser){
+      const mail = currUser.email
+
+      const userRef = doc(firestore,'Users',mail)
+      const docSnap = await getDoc(userRef)
+      let pp = []
+      if(docSnap.exists()){
+        pp = docSnap.data()['sp']
+        console.log(pp)
+      }
+      else{
+        alert("Something went wrong. Please login and try again")
+      }
+      return pp
+    }
+    else{
+      return []
+    }
+  }
+
+  const updateSharedPantry = async() => {
+    const sp = await getSharedPantry()
+    setSharedPantry(sp)
+  }
   
   const updatePersonalPantry = async() => {
     const pp = await getPersonalPantry()
@@ -85,9 +130,9 @@ export default function FunctionalBoxes(){
 
   const addGrocery = async() => {
     // pantry and grocery are set up together
-    const user = auth.currentUser
-    const mail = user.email
-    const groceryName = newName+"-"+ mail
+    const mail = currUser.email
+
+    const groceryName = newName.toLowerCase()+"-"+ mail
 
     const groceryRef = doc(firestore,'Grocery',groceryName)
 
@@ -98,7 +143,7 @@ export default function FunctionalBoxes(){
     else{
       // add new pantry item
       // note pantries are created alongside
-      await setDoc(groceryRef,{items:{}}) 
+      await setDoc(groceryRef,{items:[]}) 
       // add pantry id to list of personal pantries for the current user
       const userRef = doc(firestore,'Users',mail)
 
@@ -112,8 +157,8 @@ export default function FunctionalBoxes(){
   const addPantry = async() => {
 
     // pantry and grocery are set up together
-    const user = auth.currentUser
-    const mail = user.email
+    const mail = currUser.email
+
     const pantryName = newName.toLowerCase() +"-"+ mail
 
     const pantryRef = doc(firestore,'Pantry',pantryName)
@@ -125,7 +170,7 @@ export default function FunctionalBoxes(){
     else{
       // add new pantry item
       // note pantries are created alongside
-      await setDoc(pantryRef,{items:{}}) 
+      await setDoc(pantryRef,{items:[]}) 
       // add pantry id to list of personal pantries for the current user
       const userRef = doc(firestore,'Users',mail)
 
@@ -136,6 +181,101 @@ export default function FunctionalBoxes(){
       // add the matching grocery list
       addGrocery()
       updatePersonalPantry()
+    }
+  }
+
+  const pantryExist = async() => {
+        // pantry and grocery are set up together
+        // const user = auth.currentUser
+        // const mail = user.email
+        const mail = currUser.email
+
+        const pantryName = sharePantry.toLowerCase() +"-"+ mail
+    
+        const pantryRef = doc(firestore,'Pantry',pantryName)
+    
+        const docSnap = await getDoc(pantryRef)
+        if(docSnap.exists()){
+          return true
+        }
+        else{
+          return false
+        }
+  }
+
+  const userExist = async() => {
+    const mail = shareEmail.toLowerCase()
+
+    const userRef = doc(firestore, 'Users', mail)
+    const docSnap = await getDoc(userRef)
+    if(docSnap.exists()){
+      return true
+    }
+    else{
+      return false
+    }  
+  }
+
+  const updateUserShareGrocery = async(pantryNm, mail) => {
+    // pantry and grocery are set up together
+    const pantryName = pantryNm
+
+    const pantryRef = doc(firestore,'Grocery',pantryName)
+
+    const docSnap = await getDoc(pantryRef)
+    if(!docSnap.exists()){
+      alert("Grocery Error.")
+    }
+    else{
+      // add pantry id to list of personal pantries for the current user
+      const userRef = doc(firestore,'Users',mail)
+
+      await updateDoc(userRef, {
+        sg: arrayUnion(pantryName)
+      })
+    }
+  }
+
+  // NOTE : another way i thought of doing this prolly better: send the pantry name to new user where they decide whether to accept or reject.
+  // if accept then that user adds it themselves. if they reject they don't.... this is just hacking it just to see how it works in testing phase
+  const updateUserSharePantry = async(pantryNm, mail) => {
+    // pantry and grocery are set up together
+    const pantryName = pantryNm
+
+    const pantryRef = doc(firestore,'Pantry',pantryName)
+
+    const docSnap = await getDoc(pantryRef)
+    if(!docSnap.exists()){
+      alert("Pantry Error.")
+    }
+    else{
+      // add pantry id to list of personal pantries for the current user
+      const userRef = doc(firestore,'Users',mail)
+
+      await updateDoc(userRef, {
+        sp: arrayUnion(pantryName)
+      })
+
+      // add the matching grocery list
+      updateUserShareGrocery(pantryNm, mail)
+    }
+  }
+
+  // sharing pantry also automatically shares that grocery name
+  const share = () => {
+    if(pantryExist()) {
+      const pantryName = sharePantry.toLowerCase() +"-"+ currUser.email
+      if(userExist()){
+        const mail = shareEmail.toLowerCase()
+        updateUserSharePantry(pantryName, mail)
+      }else{
+        alert("No user with that mail found")
+        return
+      }
+    }
+    else{
+      alert("This pantry doesn't exist.")
+      return
     }
   }
 
@@ -171,8 +311,19 @@ export default function FunctionalBoxes(){
     //   Cookies.remove('userEmail')
     //   router.push('/')
     // }
-    updatePersonalPantry()
+    onAuthStateChanged(auth, (user) => {
+      console.log("i think it runs")
+      console.log(user)
+      console.log(user.email)
+      setUser(user)
+    })
+
   }, [])
+
+  useEffect(() => {
+    updatePersonalPantry()
+    updateSharedPantry()
+  }, [currUser])
 
   return (
     <Box sx={{ flexGrow: 1 }}>
@@ -199,12 +350,40 @@ export default function FunctionalBoxes(){
         </Box>
       </Modal>
 
+      <Modal
+        open={shareOpen}
+        onClose={handleShareClose}
+        aria-labelledby="modal-modal-title"
+        aria-describedby="modal-modal-description"
+      >
+        <Box sx={style}>
+          <Typography id="modal-modal-title" variant="h6" component="h2">
+            Share Pantry
+          </Typography>
+          <Stack spacing={2} justifyContent={"space-between"}>
+            <TextField id="outlined-basic" label={"Pantry name"}variant="outlined" value={sharePantry} onChange= {(e) => {setSharePantry(e.target.value)}}/>
+            <TextField id="outlined-basic" label={"Email"}variant="outlined" value={shareEmail} onChange= {(e) => {setShareEmail(e.target.value)}}/>
+            <Button variant="outlined" 
+              onClick={() => {
+              share()
+              handleShareClose()
+               }}>Share
+              </Button>
+          </Stack>
+        </Box>
+      </Modal>
+
       <Box>
         <Box display={"flex"} justifyContent={"space-between"} margin={"15px"}>
           <Typography variant="h4" >My Pantry and Grocery Lists</Typography>
-          <Button variant="contained" onClick={handleOpen}>Create Pantry</Button>
-        </Box>
+          <Stack  direction={{ xs: 'column', md: 'row' }} 
+                  spacing={2} // Space between buttons
+                  alignItems="center">
+            <Button variant="contained" onClick={handleOpen}>Create Pantry</Button>
+            <Button variant="contained" onClick={handleShareOpen}>Share Pantry</Button>            
+          </Stack>
 
+        </Box>
           {personalPantry.length == 0 ? (
               <Grid item xs={12}>
                 <Typography variant="h5" margin={"5px"} textAlign={"center"} color={"grey"}>You have no pantry/inventory at this time</Typography>
@@ -217,10 +396,10 @@ export default function FunctionalBoxes(){
                 return(
                   <Grid key={name} container rowspacing={1} marginBottom={"40px"}>
                     <Grid item md={6} xs={12} >
-                      <Item sx={hover} onClick={() =>{visitPantry(name)}}>{name} Pantry</Item>
+                      <Item sx={hover} onClick={() =>{visitPantry(pantryNm)}}>{name}</Item>
                     </Grid>
                     <Grid item md={6} xs={12}>
-                      <Item sx={hover} onClick={() =>{ visitGrocery(name)}}>{name} Grocery</Item>
+                      <Item sx={hover} onClick={() =>{ visitGrocery(pantryNm)}}>{name} Grocery</Item>
                     </Grid>
                   </Grid>
                 )
@@ -231,7 +410,30 @@ export default function FunctionalBoxes(){
         }
       </Box>
       <Box>
-          <Typography variant="h4" margin={"5px"} textAlign={"center"}>Shared With Me</Typography>
+        <Typography variant="h4" margin={"5px"} textAlign={"center"}>Shared With Me</Typography>
+        {sharedPantry.length == 0 ? (
+            <Grid item xs={12}>
+              <Typography variant="h5" margin={"5px"} textAlign={"center"} color={"grey"}>You have no shared pantry/inventory at this time</Typography>
+            </Grid>
+            ) : (
+              <Box width={"100%"} height={"35%"} overflow={"auto"} display={"flex"} flexDirection={"column"} alignItems={"center"} justifyContent={"center"}>
+                {sharedPantry.map((pantryNm) => {
+                  const name = pantryNm.split("-")[0]
+                  return(
+                    <Grid key={name} container rowspacing={1} marginBottom={"40px"}>
+                      <Grid item md={6} xs={12} >
+                        <Item sx={hover} onClick={() =>{visitPantry(pantryNm)}}>{name}</Item>
+                      </Grid>
+                      <Grid item md={6} xs={12}>
+                        <Item sx={hover} onClick={() =>{ visitGrocery(pantryNm)}}>{name} Grocery</Item>
+                      </Grid>
+                    </Grid>
+                  )
+                })
+              }
+              </Box>
+            )
+          }
       </Box>
     </Box>
   );
