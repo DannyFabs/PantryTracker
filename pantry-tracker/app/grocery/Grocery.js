@@ -270,24 +270,31 @@ export default function Grocery() {
       </Modal>
       <Box
         width= "100%">
-        <Box width="100%">
-          <Stack width="100%" direction={"row"} spacing={2} alignItems="center" justify-content="space-between"  bgcolor={"#ADD8E6"}>
-            <Home fontSize="large" onClick={visitHome} />
-            <Typography variant="h2" bgcolor={"#ADD8E6"} textAlign={"center"} marginY={"5px"} flexGrow={1}>My Grocery List</Typography>
+          <Box width="100%" bgcolor={"#ADD8E6"} style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            zIndex: 1000 // Ensure it stays above other content
+          }}>
+            <Stack width="100%" direction={"row"} spacing={2} alignItems="center" justify-content="space-between"  bgcolor={"#ADD8E6"}>
+              <Home fontSize="large" onClick={visitHome} />
+              <Typography variant="h2" bgcolor={"#ADD8E6"} textAlign={"center"} marginY={"5px"} flexGrow={1}>My Grocery List</Typography>
+            </Stack>
+          
+          <Stack 
+          direction={{ xs: 'column', md: 'row' }} 
+          spacing={{xs:2, md:10}} // Space
+          alignItems="center"
+          justifyContent={"center"}
+          margin={1}
+          >      
+            <TextField id="outlined-basic" label="Search" variant="outlined" onChange={(e) => {searchItem(e.target.value)}}/>
+            <Button variant="contained" onClick={handleOpen}>Add item</Button>
           </Stack>
         </Box>
-        
-        <Stack 
-        direction={{ xs: 'column', md: 'row' }} 
-        spacing={{xs:2, md:10}} // Space
-        alignItems="center"
-        justifyContent={"center"}
-        margin={2}
-        >      
-          <TextField id="outlined-basic" label="Search" variant="outlined" onChange={(e) => {searchItem(e.target.value)}}/>
-          <Button variant="contained" onClick={handleOpen}>Add item</Button>
-        </Stack>
-        <Stack width="100%" height="100vh" spacing={2} overflow={'auto'}>
+
+
+        <Stack width="100%" height="100vh" spacing={2} overflow={'auto'} marginTop={{ xs:35, md: 20}}>
           {grocery.map(itemNm =>{
             const name = itemNm.charAt(0).toUpperCase() + itemNm.slice(1);
             return (<Box 
