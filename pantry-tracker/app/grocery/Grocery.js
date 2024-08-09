@@ -294,7 +294,7 @@ export default function Grocery() {
         </Box>
 
 
-        <Stack width="100%" height="100vh" spacing={2} overflow={'auto'} marginTop={{ xs:35, md: 20}}>
+        <Stack width="100%" height="auto" spacing={2} overflow={'auto'} marginTop={{ xs:35, md: 20}}>
           {grocery.map(itemNm =>{
             const name = itemNm.charAt(0).toUpperCase() + itemNm.slice(1);
             return (<Box 
