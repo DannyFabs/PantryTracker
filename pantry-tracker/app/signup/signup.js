@@ -14,17 +14,22 @@ import { User, userConverter } from '../objects/User.js';
 
 export default function Login(){
 
+    // state variables for email and password
     const [email,setEmail] = useState('')
     const [password,setPassword] = useState('')
 
     const router = useRouter();
 
+    // Connect to firestore to Create a new user
     const addNewUser = async(user) => {
         const ref = doc(firestore, "Users", email).withConverter(userConverter)
-        // TODO: add a check to see if the user exist.
+        //add a check to see if the user exist.
         await setDoc(ref, new User(email,[],[],[],[]))
     }
 
+    /**
+     * Link to dynamodb to create a new user with the email and password
+     */
     const trySignUp = () => {
         createUserWithEmailAndPassword(auth, email, password)
         .then((userCredential) => {
@@ -43,6 +48,9 @@ export default function Login(){
         });
     }
 
+    /**
+     * Function to handle sign up when the signup button is clicked
+     */
     const handleSignUp = () => {
         if(email.length == 0 || password.length==0){
             alert("Please enter a valid email address and password")

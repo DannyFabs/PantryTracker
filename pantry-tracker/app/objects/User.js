@@ -1,4 +1,4 @@
-
+//Class that represents a user object
 class User{
     constructor (email, sp,pp,sg,pg){
         this.email = email
@@ -14,7 +14,7 @@ class User{
 
 }
 
-// Firestore data converter
+// Firestore data converter- from user Object in js to Firebase User object.
 const userConverter = {
     toFirestore: (user) => {
         return {

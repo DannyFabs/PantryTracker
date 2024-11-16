@@ -10,11 +10,13 @@ import { signInWithEmailAndPassword} from "firebase/auth"
 
 export default function Login(){
 
+    // state variables for email and password
     const [email,setEmail] = useState('')
     const [password,setPassword] = useState('')
 
     const router = useRouter();
 
+    // Try sign in with firebase authentication
     const trySignIn = () => {
         signInWithEmailAndPassword(auth, email, password)
         .then((userCredential) => {
@@ -31,6 +33,9 @@ export default function Login(){
         });
     }
 
+    /**
+     * Function to handle sign in when the sign in button is clicked
+     */
     const handleSignIn = () => {
         if(email.length == 0 || password.length == 0){
             alert("Please enter an email address and password")

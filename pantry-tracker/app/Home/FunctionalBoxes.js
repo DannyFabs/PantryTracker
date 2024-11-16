@@ -38,12 +38,14 @@ const gridItemStyle = {
 
 export default function FunctionalBoxes(){
 
+  // user state variable
   const [currUser, setUser] = useState(null)
 
-
+  // pantry state variables
   const [personalPantry, setPersonalPantry] = useState([])
   const [sharedPantry, setSharedPantry] = useState([])
 
+  // modal state variables
   const [open, setOpen] = React.useState(false);
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
@@ -60,16 +62,28 @@ export default function FunctionalBoxes(){
 
   const router = useRouter()
 
+  /**
+   * Visit a pantry List
+   * @param {String} pantryName The name of a pantry
+   */
   const visitPantry = (pantryName) =>{
     Cookies.set('currentPantry', pantryName)
     router.push("/component")
   }
 
+  /**
+   * Visit a grocery list page
+   * @param {string} groceryListName The name of grocery list
+   */
   const visitGrocery = (groceryListName) =>{
     Cookies.set('currentGrocery', groceryListName)
     router.push("/grocery")
   }
 
+  /**
+   * Get a logged in users list of personal pantries
+   * @returns {list} List of personal pantry's
+   */
   const getPersonalPantry = async() =>{
     // const user = auth.currentUser
     if(currUser){
@@ -93,6 +107,10 @@ export default function FunctionalBoxes(){
 
   }
 
+  /**
+   * Get a logged in users list of shared pantry'
+   * @returns {list} List of shared pantry's
+   */
   const getSharedPantry = async() =>{
     // const user = auth.currentUser
     if(currUser){
@@ -125,6 +143,9 @@ export default function FunctionalBoxes(){
     setPersonalPantry(pp)
   }
 
+  /**
+   * Add a new grocery list to all grocery lists
+   */
   const addGrocery = async() => {
     // pantry and grocery are set up together
     const mail = currUser.email
@@ -151,6 +172,9 @@ export default function FunctionalBoxes(){
     // updatePersonalPantry()
   }
 
+  /**
+   * Add a new pantry list to all pantry lists
+   */
   const addPantry = async() => {
 
     // pantry and grocery are set up together
@@ -181,6 +205,10 @@ export default function FunctionalBoxes(){
     }
   }
 
+  /**
+   * Function to check if a pantry exists. True if it exist false otherwise.
+   * @returns {boolean} True or false
+   */
   const pantryExist = async() => {
         // pantry and grocery are set up together
         // const user = auth.currentUser
@@ -200,6 +228,10 @@ export default function FunctionalBoxes(){
         }
   }
 
+  /**
+   * Function to check if a user exists. True if it exist false otherwise.
+   * @returns {boolean} True or false
+   */
   const userExist = async() => {
     const mail = shareEmail.toLowerCase()
 
@@ -213,6 +245,11 @@ export default function FunctionalBoxes(){
     }  
   }
 
+  /**
+   * Share pantry list
+   * @param {String} pantryNm "Name of the pantry to be shared"
+   * @param {String} mail "Email that the pantry list is shared with"
+   */
   const updateUserShareGrocery = async(pantryNm, mail) => {
     // pantry and grocery are set up together
     const pantryName = pantryNm
