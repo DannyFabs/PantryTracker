@@ -57,6 +57,10 @@ export default function Grocery() {
   const handleEditOpen = () => setEditOpen(true);
   const handleEditClose = () => setEditOpen(false);
 
+  /**
+   * 
+   * @returns {list} List containing current grocery items.
+   */
   const getCurrGrocery = async() => {
     // const snapshot = query(collection(firestore, 'Grocery'))
     // const docs = await getDocs(snapshot)
@@ -78,6 +82,10 @@ export default function Grocery() {
     setGrocery(groceryItems)
   }
 
+  /**
+   * Add item to the grocery list.
+   * @param {String} item Name of new grocery item
+   */
   const addItem = async(item) => {
     // const itemLower = item.toLowerCase()
     // const docRef = doc(firestore, "Grocery",itemLower)
@@ -109,6 +117,10 @@ export default function Grocery() {
     updateGrocery();
   }
 
+  /**
+   * Delete a grocery item.
+   * @param {String} item Name of an item
+   */
   const deleteItem = async(item) => {
     // const docRef = doc(firestore, "Grocery",itemLower)
     // const docSnap = await getDoc(docRef);
@@ -124,6 +136,10 @@ export default function Grocery() {
     updateGrocery()  
   }
 
+  /**
+   * Look up an item in the grocery list.
+   * @param {String} searchValue Value to be searched up
+   */
   const searchItem = async(searchValue) => {
       const lowerCaseSearch = searchValue.toLowerCase();
       const groceryItems = await getCurrGrocery()
@@ -155,6 +171,10 @@ export default function Grocery() {
     addItem(newName)
   }
 
+  /**
+   * Handle what happens when an item is purchased
+   * @param {String} item Name of item that has been purchased
+   */
   const handlePurchase = async(item) => {
     const itemLower = item.toLowerCase()
     // in the pantry collection
