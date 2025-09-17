@@ -1,11 +1,9 @@
 "use client"// client component
-import React, {useEffect, useState} from 'react';
-import reactDom from "react-dom";
+import React, {useState} from 'react';
 
-import { Box, Stack,Typography,Button, Modal, TextField,Tooltip, tooltipClasses, styled } from "@mui/material";
-import { Home } from "@mui/icons-material";
+import { Box,Typography,Button, TextField, Paper } from "@mui/material";
 import { firestore, auth } from "../firebase.js";
-import {collection, doc, getDocs,query,setDoc, deleteDoc, getDoc} from 'firebase/firestore'
+import {doc,setDoc} from 'firebase/firestore'
 import { useRouter } from "next/navigation";
 import {createUserWithEmailAndPassword} from 'firebase/auth'
 
@@ -14,9 +12,10 @@ import { User, userConverter } from '../objects/User.js';
 
 export default function Login(){
 
-    // state variables for email and password
+    // state variables for email, password and display name
     const [email,setEmail] = useState('')
     const [password,setPassword] = useState('')
+    const [displayName, setDisplayName] = useState('')
 
     const router = useRouter();
 
@@ -49,23 +48,112 @@ export default function Login(){
     }
 
     /**
-     * Function to handle sign up when the signup button is clicked
+     * Function to handle when the signup button is clicked
      */
     const handleSignUp = () => {
-        if(email.length == 0 || password.length==0){
-            alert("Please enter a valid email address and password")
+        if(email.length == 0 || password.length==0 || displayName.length == 0){
+            alert("Please enter a value for all fields")
         }
         trySignUp()
     }
 
+    const handleSignIn = () => {
+        router.push("/")
+    }
+
     return(
-        <Box height="100vh" display={"flex"}  flexDirection={"column"} justifyContent={"center"} alignItems={"center"} sx={{margin:'auto'}}>
-            <Box display={"flex"}  flexDirection={"column"} justifyContent={"center"} alignItems={"center"} border={"2px solid grey"} sx={{margin:'auto', padding:'10px'}}>
-                <Typography variant='h4' sx={{margin:'5px'}}>Family Grocery Tracker</Typography>
-                <TextField id="outlined-basic" label="Email address" variant="outlined" sx={{margin:'5px'}} value={email} onChange={(e) => setEmail(e.target.value)} />
-                <TextField type='password' id="outlined-basic" label="Password" variant="outlined" sx={{margin:'5px'}} value={password} onChange={(e) => setPassword(e.target.value)} />
-                <Button variant="contained" sx={{margin:'5px'}} onClick={handleSignUp}>Sign Up</Button>
-            </Box>
+        <Box
+            height="100vh"
+            display="flex"
+            flexDirection="column"
+            justifyContent="flex-start"
+            alignItems="center"
+            sx={{
+                background: "linear-gradient(180deg, #f5f5f5 0%, #e0e0e0 100%)",
+                pt: 10, // padding from top
+            }}
+        >
+            <Typography
+                variant="h3"
+                sx={{
+                fontWeight: 700,
+                color: "#2C3E50",
+                mb: 6,
+                }}
+            >
+                ReStockd
+            </Typography>
+             {/* Login Card */}
+            <Paper
+                elevation={4}
+                sx={{
+                width: "90%",
+                maxWidth: 400,
+                p: 4,
+                borderRadius: 3,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                backgroundColor: "#ffffff",
+                }}
+            >
+                <Typography variant="h5" sx={{ mb: 3, color: "#34495E" }}>
+                    Join ReStockd
+                </Typography>
+
+                {/* DisplayName */}
+                <TextField
+                fullWidth
+                label="Name"
+                variant="outlined"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                sx={{ mb: 2 }}
+                />
+
+                {/* Email */}
+                <TextField
+                fullWidth
+                label="Email address"
+                variant="outlined"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                sx={{ mb: 2 }}
+                />
+
+                {/* Password */}
+                <TextField
+                fullWidth
+                type="password"
+                label="Password"
+                variant="outlined"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                sx={{ mb: 3 }}
+                />
+
+                <Button
+                fullWidth
+                variant="contained"
+                sx={{
+                    mb: 2,
+                    backgroundColor: "#2C3E50",
+                    "&:hover": { backgroundColor: "#1A252F" },
+                }}
+                onClick={handleSignUp}
+                >
+                Sign Up
+                </Button>
+
+                <Button
+                fullWidth
+                variant="text"
+                sx={{ color: "#2C3E50" }}
+                onClick={handleSignIn}
+                >
+                Sign In
+                </Button>
+            </Paper>
         </Box>
     )
 
