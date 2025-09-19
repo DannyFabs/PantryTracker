@@ -1,8 +1,7 @@
 "use client"// client component
-import React, {useEffect, useState} from 'react';
-import reactDom from "react-dom";
+import React, {useState} from 'react';
 
-import { Box,Typography,Button, TextField} from "@mui/material";
+import { Box,Typography,Paper,TextField,Button} from "@mui/material";
 import { auth } from "../firebase.js";
 import { useRouter } from "next/navigation";
 
@@ -49,14 +48,89 @@ export default function Login(){
     }
 
     return(
-        <Box height="100vh" display={"flex"}  flexDirection={"column"} justifyContent={"center"} alignItems={"center"} sx={{margin:'auto'}}>
-            <Box display={"flex"}  flexDirection={"column"} justifyContent={"center"} alignItems={"center"} border={"2px solid grey"} sx={{margin:'auto', padding:'10px'}}>
-                <Typography variant='h4' sx={{margin:'5px'}}>Family Grocery Tracker</Typography>
-                <TextField id="outlined-basic" label="Email address" variant="outlined" sx={{margin:'5px'}} value={email} onChange={(e) => setEmail(e.target.value)} />
-                <TextField type='password' id="outlined-basic" label="Password" variant="outlined" sx={{margin:'5px'}} value={password} onChange={(e) => setPassword(e.target.value)} />
-                <Button variant="contained" sx={{margin:'5px'}} onClick={handleSignIn}>Sign In</Button>
-                <Button variant="text" sx={{margin:'5px'}} onClick={handleSignUp}>Sign Up</Button>
-            </Box>
+        <Box
+            height="100vh"
+            display="flex"
+            flexDirection="column"
+            justifyContent="flex-start"
+            alignItems="center"
+            sx={{
+                background: "linear-gradient(180deg, #f5f5f5 0%, #e0e0e0 100%)",
+                pt: 10, // padding from top
+            }}
+        >
+            <Typography
+                variant="h3"
+                sx={{
+                fontWeight: 700,
+                color: "#2C3E50", // deep color
+                mb: 6,
+                }}
+            >
+                ReStockd
+            </Typography>
+
+            {/* Login Card */}
+            <Paper
+                elevation={4}
+                sx={{
+                width: "90%",
+                maxWidth: 400,
+                p: 4,
+                borderRadius: 3,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                backgroundColor: "#ffffff",
+                }}
+            >
+                <Typography variant="h5" sx={{ mb: 3, color: "#34495E" }}>
+                Login to ReStockd
+                </Typography>
+
+                {/* Email */}
+                <TextField
+                fullWidth
+                label="Email address"
+                variant="outlined"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                sx={{ mb: 2 }}
+                />
+
+                {/* Password */}
+                <TextField
+                fullWidth
+                type="password"
+                label="Password"
+                variant="outlined"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                sx={{ mb: 3 }}
+                />
+
+                <Button
+                fullWidth
+                variant="contained"
+                sx={{
+                    mb: 2,
+                    backgroundColor: "#2C3E50",
+                    "&:hover": { backgroundColor: "#1A252F" },
+                }}
+                onClick={handleSignIn}
+                >
+                Sign In
+                </Button>
+
+                <Button
+                fullWidth
+                variant="text"
+                sx={{ color: "#2C3E50" }}
+                onClick={handleSignUp}
+                >
+                Sign Up
+                </Button>
+            </Paper>
         </Box>
     )
 
