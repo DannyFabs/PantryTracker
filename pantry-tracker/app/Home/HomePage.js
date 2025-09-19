@@ -1,5 +1,5 @@
 "use client"// client component
-import { AppBar,Tabs,Tab,Box,Typography,Card,CardContent,IconButton,Fab} from "@mui/material";
+import { AppBar,Toolbar,Tabs,Tab,Box,Typography,Card,CardContent,IconButton,Fab} from "@mui/material";
 import Inventory2Icon from "@mui/icons-material/Inventory2";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import AddIcon from "@mui/icons-material/Add";
@@ -373,9 +373,11 @@ export default function HomePage(){
     <Box sx={{ height: "100vh", display: "flex", flexDirection: "column", background: "linear-gradient(180deg, #F5F5F5, #E0E0E0)" }}>
       {/* AppBar */}
       <AppBar position="static" sx={{ backgroundColor: "#2C3E50" }}>
-        <Typography variant="h6" sx={{ p: 2 }}>
-          ReStockd
-        </Typography>
+        <Toolbar sx= {{ display:"flex", justifyContent: "center"}}>
+          <Typography variant="h3" sx={{ p: 2 }}>
+            ReStockd
+          </Typography>
+        </Toolbar>
       </AppBar>
 
       {/* Tabs */}
