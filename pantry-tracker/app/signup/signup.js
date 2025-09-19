@@ -21,13 +21,13 @@ export default function Login(){
 
     // Connect to firestore to Create a new user
     const addNewUser = async(user) => {
-        const ref = doc(firestore, "Users", email).withConverter(userConverter)
+        const ref = doc(firestore, "Usersv2", user.uid).withConverter(userConverter)
         //add a check to see if the user exist.
-        await setDoc(ref, new User(email,[],[],[],[]))
+        await setDoc(ref, new User(user.uid,user.email,displayName,[]))
     }
 
     /**
-     * Link to dynamodb to create a new user with the email and password
+     * Link to firestore to create a new user with the email and password
      */
     const trySignUp = () => {
         createUserWithEmailAndPassword(auth, email, password)

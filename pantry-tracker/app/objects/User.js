@@ -1,11 +1,17 @@
 //Class that represents a user object
 class User{
-    constructor (email, sp,pp,sg,pg){
+    // constructor (email, sp,pp,sg,pg){
+    //     this.email = email
+    //     this.sp = sp
+    //     this.pp = pp
+    //     this.sg = sg
+    //     this.pg = pg
+    // }
+    constructor (uid,email,displayName,pods){
+        this.uid = uid
         this.email = email
-        this.sp = sp
-        this.pp = pp
-        this.sg = sg
-        this.pg = pg
+        this.displayName = displayName
+        this.pods = pods
     }
 
     toString(){
@@ -18,16 +24,15 @@ class User{
 const userConverter = {
     toFirestore: (user) => {
         return {
+            uid: user.uid,
             email: user.email,
-            sp: [],
-            pp: [],
-            sg: [],
-            pg: [],
+            displayName : user.displayName,
+            pods : []
             };
     },
     fromFirestore: (snapshot, options) => {
         const data = snapshot.data(options);
-        return new User(data.email, data.sp, data.pp, data.sg, data.pg);
+        return new User(data.uid, data.email, data.displayName, data.pods);
     }
 };
 
