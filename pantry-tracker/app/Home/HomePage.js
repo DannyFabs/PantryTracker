@@ -3,6 +3,7 @@ import { AppBar,Toolbar,Tabs,Tab,Box,Typography,Card,CardContent,IconButton,Fab}
 import Inventory2Icon from "@mui/icons-material/Inventory2";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import AddIcon from "@mui/icons-material/Add";
+import CircularProgress from "@mui/material/CircularProgress"
 
 import { styled } from '@mui/material/styles';
 import React, {useEffect, useState} from 'react';
@@ -13,7 +14,7 @@ import Cookies from "js-cookie";
 import { auth, firestore } from "../firebase";
 import { doc, getDoc,setDoc, updateDoc, arrayUnion} from 'firebase/firestore'
 import { onAuthStateChanged } from "firebase/auth";
-
+import { useUser } from "../context/userContext"
 
 // const Item = styled(Paper)(({ theme }) => ({
 //     backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
@@ -361,13 +362,46 @@ export default function HomePage(){
   //   updateSharedPantry()
   // }, [currUser])
 
+
   const [tabIndex, setTabIndex] = useState(0);
 
   const handleTabChange = (event, newValue) => {
     setTabIndex(newValue);
   }
 
+  const {user, profile, loading } = useUser();
+
+  const [pods, setPods] = useState([]);
+
+  useEffect(() => {
+    if(!loading && !user){
+      router.push("/")// no user back to login page
+    }
+  }, [user, loading, router])
+
+  useEffect(() => {
+    if(!loading && profile){
+      // when we get the profile get the pod ids
+      setPods(profile.pods);
+    }
+  }, [profile, loading])
+
+  //use effect triggered by pods, to get the pod information,
+
   const lists = [{id: 0, name:"Apt348"}, {id: 1, name:"AderemiKitchen"}, {id: 2, name:"Apt348"}]
+
+  if (loading) {
+    return(
+      <Box
+      display="flex"
+      justifyContent="center"
+      alignItems="center"
+      height="100vh"
+    >
+      <CircularProgress />
+    </Box>
+    )
+  }
 
   return (
     <Box sx={{ height: "100vh", display: "flex", flexDirection: "column", background: "linear-gradient(180deg, #F5F5F5, #E0E0E0)" }}>
