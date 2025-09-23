@@ -1,9 +1,12 @@
 "use client"// client component
-import { AppBar,Toolbar,Tabs,Tab,Box,Typography,Card,CardContent,IconButton,Fab} from "@mui/material";
+import { AppBar,Toolbar,Tabs,Tab,Box,Typography,
+  Card,CardContent,IconButton,Fab} from "@mui/material";
 import Inventory2Icon from "@mui/icons-material/Inventory2";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import AddIcon from "@mui/icons-material/Add";
 import CircularProgress from "@mui/material/CircularProgress"
+
+import PantryDialog from "./CreatePantryDialog"
 
 import { styled } from '@mui/material/styles';
 import React, {useEffect, useState} from 'react';
@@ -51,7 +54,7 @@ export default function HomePage(){
   const [sharedPantry, setSharedPantry] = useState([])
 
   // modal state variables
-  const [open, setOpen] = React.useState(false);
+  // const [open, setOpen] = React.useState(false);
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
@@ -376,6 +379,10 @@ export default function HomePage(){
   const [personalPods, setPersonalPods] = useState([])
   const [sharedPods, setSharedPods] = useState([])
 
+  //dialogue box
+  const [openDialog, setOpenDialog] = useState(false)
+  const [dialogType, setDialogType] = useState("")
+
   const splitPodsIntoPersonalAndShared = (pods) => {
     const personalPods = pods.filter(pod => pod.type === "personal")
     const sharedPods = pods.filter(pod => pod.type === "shared")
@@ -386,6 +393,17 @@ export default function HomePage(){
   function capitalize(str) {
     if (!str) return "";
     return str.charAt(0).toUpperCase() + str.slice(1);
+  }
+
+  const handleAddClick = () => {
+    if(tabIndex == 0){
+      // personal pods
+      setDialogType("personal")
+      setOpenDialog(true)
+    }else{
+      setDialogType("shared")
+      setOpenDialog(true)
+    }
   }
 
   useEffect(() => {
@@ -519,12 +537,17 @@ export default function HomePage(){
           backgroundColor: "#2C3E50",
           "&:hover": { backgroundColor: "#1A252F" },
         }}
-        onClick={() => console.log("Add new inventory")}
+        onClick={() => handleAddClick()}
       >
         <AddIcon />
       </Fab>
-
-
+      
+      <PantryDialog
+        open = {openDialog}
+        onClose = {() => setOpenDialog(false)}
+        onCreate = {() => console.log("Hello world")}
+        type = {dialogType}
+      />
     </Box>
   );
   // return (
