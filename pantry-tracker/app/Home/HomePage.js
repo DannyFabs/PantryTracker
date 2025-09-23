@@ -371,7 +371,22 @@ export default function HomePage(){
 
   const {user, profile, loading } = useUser();
 
-  const [pods, setPods] = useState([]);
+  const [loadingPods, setLoadingPods] = useState(true)
+
+  const [personalPods, setPersonalPods] = useState([])
+  const [sharedPods, setSharedPods] = useState([])
+
+  const splitPodsIntoPersonalAndShared = (pods) => {
+    const personalPods = pods.filter(pod => pod.type === "personal")
+    const sharedPods = pods.filter(pod => pod.type === "shared")
+    setPersonalPods(personalPods)
+    setSharedPods(sharedPods)
+  }
+
+  function capitalize(str) {
+    if (!str) return "";
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  }
 
   useEffect(() => {
     if(!loading && !user){
@@ -380,17 +395,41 @@ export default function HomePage(){
   }, [user, loading, router])
 
   useEffect(() => {
-    if(!loading && profile){
+    if(!loading && profile?.pods?.length > 0){
       // when we get the profile get the pod ids
-      setPods(profile.pods);
+      // setPods(profile.pods);
+      const loadPods = async () => {
+        try {
+          // Get all pods in a users list of pods
+          const podPromises = profile.pods.map((id) =>
+            getDoc(doc(firestore, "pods", id))
+          );
+          
+          const podSnaps = await Promise.all(podPromises);
+          console.log(podSnaps)
+          const podData = podSnaps
+            .filter((snap) => snap.exists())
+            .map((snap) => ({
+              id: snap.id,
+              ...snap.data(),
+            }));
+          // new function
+          splitPodsIntoPersonalAndShared(podData)
+          // setPods(podData);
+        } catch (err) {
+          console.error("Error loading pods:", err);
+        } finally {
+          setLoadingPods(false);
+        }
+      };
+      loadPods();
+    }
+    else{
+      setLoadingPods(false);
     }
   }, [profile, loading])
 
-  //use effect triggered by pods, to get the pod information,
-
-  const lists = [{id: 0, name:"Apt348"}, {id: 1, name:"AderemiKitchen"}, {id: 2, name:"Apt348"}]
-
-  if (loading) {
+  if (loadingPods) {
     return(
       <Box
       display="flex"
@@ -431,9 +470,9 @@ export default function HomePage(){
 
       {/* Scrollable Cards */}
       <Box sx={{ flex: 1, overflowY: "auto", p: 2 }}>
-        {lists.map((list) => (
+        {(tabIndex == 0 ? personalPods : sharedPods).map((pod) => (
           <Card
-            key={list.id}
+            key={pod.id}
             sx={{
               mb: 2,
               borderRadius: 2,
@@ -447,7 +486,7 @@ export default function HomePage(){
           >
             <CardContent>
               <Typography variant="h6" sx={{ color: "#2C3E50" }}>
-                {list.name}
+                {capitalize(pod.name)}
               </Typography>
             </CardContent>
 
@@ -484,6 +523,8 @@ export default function HomePage(){
       >
         <AddIcon />
       </Fab>
+
+
     </Box>
   );
   // return (
