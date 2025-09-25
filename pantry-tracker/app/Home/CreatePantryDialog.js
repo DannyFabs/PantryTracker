@@ -43,7 +43,7 @@ export default function PantryDialog({ open, onClose, onCreate, type }) {
     setEmails(emails.filter((e) => e !== emailToDelete));
   };
 
-  const handleCreate = () => {
+  const handleCreate = async() => {
     if (!pantryName) {
       alert("Please enter a pantry name");
       return;
@@ -52,7 +52,7 @@ export default function PantryDialog({ open, onClose, onCreate, type }) {
       type === "personal"
         ? { pantryName }
         : { pantryName, emails };
-    onCreate(payload);
+    await onCreate(payload);
     // Reset dialog
     setPantryName("");
     setEmailInput("");

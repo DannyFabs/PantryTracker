@@ -15,7 +15,7 @@ import reactDom from "react-dom";
 import Cookies from "js-cookie";
 
 import { auth, firestore } from "../firebase";
-import { doc, getDoc,setDoc, updateDoc, arrayUnion} from 'firebase/firestore'
+import { doc, getDoc,setDoc, updateDoc, arrayUnion, addDoc, collection} from 'firebase/firestore'
 import { onAuthStateChanged } from "firebase/auth";
 import { useUser } from "../context/userContext"
 
@@ -406,6 +406,59 @@ export default function HomePage(){
     }
   }
 
+  const personalPodNameExist = (podName) => {
+    personalPods.forEach(personalPod => {
+      if(personalPod.name.toLowerCase() == podName){
+        return true;
+      }
+    });
+
+    return false;
+  }
+
+  const validateSharedPodNameDoesNotExist = () => {
+
+  }
+    /**
+   * Add a new pantry list to all pantry lists
+   */
+  const createNewPantry = async(payload) => {
+
+    if(Object.keys(payload).length == 1){
+      //personal pantry...
+      const podName = payload.pantryName.toLowerCase()
+      if(personalPodNameExist(podName))
+        alert(`You already have a personal pantry named '${payload.pantryName}'`);
+
+      const groceryListDocRef = await addDoc(collection(firestore, 'lists'), {
+        items: []
+      })
+
+      const pantryListDocRef = await addDoc(collection(firestore, 'lists'), {
+        items: []
+      })
+
+      const podDocRef = await addDoc(collection(firestore,'pods'), {
+        name: podName,
+        owner: profile.uid,
+        type: "personal",
+        groupId: null,
+        groceryListId: groceryListDocRef.id,
+        pantryListId:pantryListDocRef.id
+      })
+
+      const userRef = doc(firestore, "Usersv2", profile.uid);
+      await updateDoc(userRef, {
+        pods: arrayUnion(podDocRef.id)
+      })
+
+    }else{
+      // shared pantry: pantry name and shared users
+      console.log("Hello world")
+    }
+
+  }
+
   useEffect(() => {
     if(!loading && !user){
       router.push("/")// no user back to login page
@@ -545,7 +598,7 @@ export default function HomePage(){
       <PantryDialog
         open = {openDialog}
         onClose = {() => setOpenDialog(false)}
-        onCreate = {() => console.log("Hello world")}
+        onCreate = {(payload) => createNewPantry(payload)}
         type = {dialogType}
       />
     </Box>
