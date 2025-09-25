@@ -15,7 +15,7 @@ import reactDom from "react-dom";
 import Cookies from "js-cookie";
 
 import { auth, firestore } from "../firebase";
-import { doc, getDoc,setDoc, updateDoc, arrayUnion, addDoc, collection} from 'firebase/firestore'
+import { doc, writeBatch, getDoc,setDoc, updateDoc, arrayUnion, addDoc, collection, getDocs} from 'firebase/firestore'
 import { onAuthStateChanged } from "firebase/auth";
 import { useUser } from "../context/userContext"
 
@@ -407,56 +407,109 @@ export default function HomePage(){
   }
 
   const personalPodNameExist = (podName) => {
-    personalPods.forEach(personalPod => {
-      if(personalPod.name.toLowerCase() == podName){
+    for (const personalPod of personalPods) {
+      if (personalPod.name.toLowerCase() === podName) {
         return true;
       }
-    });
-
+    }
     return false;
   }
 
-  const validateSharedPodNameDoesNotExist = () => {
-
+  const sharedPodNameExist = (podName) => {
+    for (const sharedPod of sharedPods) {
+      if (sharedPod.name.toLowerCase() === podName) {
+        return true;
+      }
+    }
+    return false;
   }
-    /**
+  
+  const createListDoc = async () => {
+    const docRef = await addDoc(collection(firestore, "lists"), { items: [] });
+    return docRef.id;
+  };
+
+  const addPodToUsers = async (userIds, podId) => {
+    const batch = writeBatch(firestore);
+    userIds.forEach((uid) => {
+      const userRef = doc(firestore, "Usersv2", uid);
+      batch.update(userRef, { pods: arrayUnion(podId) });
+    });
+    await batch.commit();
+  };
+  
+  /**
    * Add a new pantry list to all pantry lists
    */
   const createNewPantry = async(payload) => {
+    const podName = payload.pantryName.toLowerCase()
 
-    if(Object.keys(payload).length == 1){
-      //personal pantry...
-      const podName = payload.pantryName.toLowerCase()
-      if(personalPodNameExist(podName))
-        alert(`You already have a personal pantry named '${payload.pantryName}'`);
+      // Determine if personal or shared
+    const isPersonal = Object.keys(payload).length === 1;
 
-      const groceryListDocRef = await addDoc(collection(firestore, 'lists'), {
-        items: []
-      })
-
-      const pantryListDocRef = await addDoc(collection(firestore, 'lists'), {
-        items: []
-      })
-
-      const podDocRef = await addDoc(collection(firestore,'pods'), {
-        name: podName,
-        owner: profile.uid,
-        type: "personal",
-        groupId: null,
-        groceryListId: groceryListDocRef.id,
-        pantryListId:pantryListDocRef.id
-      })
-
-      const userRef = doc(firestore, "Usersv2", profile.uid);
-      await updateDoc(userRef, {
-        pods: arrayUnion(podDocRef.id)
-      })
-
-    }else{
-      // shared pantry: pantry name and shared users
-      console.log("Hello world")
+    if (isPersonal && personalPodNameExist(podName)) {
+      alert(`You already have a personal pantry named '${payload.pantryName}'`);
+      return;
     }
 
+    if (!isPersonal && sharedPodNameExist(podName)) {
+      alert(`You already have a shared pantry named '${payload.pantryName}'`);
+      return;
+    } 
+
+    // Create grocery and pantry list documents
+    const groceryListId = await createListDoc();
+    const pantryListId = await createListDoc();
+
+    let groupId = null;
+    let allUserIds = [profile.uid]; // owner always included
+
+    if(!isPersonal){
+      //RED FLAG: Not at scale so it's fine LOL.
+      const usersRef = collection(firestore, "Usersv2");
+      const q = query(usersRef, where("email", "in", payload.emails));
+      const querySnapshot = await getDocs(q);
+
+      const existingUsers = [];
+      const existingEmails = []
+      querySnapshot.forEach((doc) => {
+        existingUsers.push(doc.id);
+        existingEmails.push(doc.email);
+      });
+
+      if (existingUsers.length === 0) {
+        alert("None of the member emails exist. Please use valid member emails.");
+        return;
+      }
+
+      allUserIds = [...allUserIds, ...existingUsers];
+
+      const groupDocRef = await addDoc(collection(firestore, "groups"), {
+        memberIds: allUserIds,
+      });
+      groupId = groupDocRef.id;
+
+      // Show missing emails if any
+      const missingEmails = payload.emails.filter(
+        (email) => !existingEmails.includes(email)
+      );
+      if (missingEmails.length > 0) {
+        alert(`These users were not found: ${missingEmails.join(", ")}`);
+      }
+    }
+
+    // Create pod
+    const podDocRef = await addDoc(collection(firestore, "pods"), {
+      name: podName,
+      owner: profile.uid,
+      type: isPersonal ? "personal" : "shared",
+      groupId,
+      groceryListId,
+      pantryListId,
+    });
+
+    // Update all users in batch
+    await addPodToUsers(allUserIds, podDocRef.id);
   }
 
   useEffect(() => {
