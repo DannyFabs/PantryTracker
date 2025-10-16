@@ -19,6 +19,7 @@ import { doc, writeBatch, getDoc,setDoc, updateDoc, arrayUnion, addDoc, collecti
 import { onAuthStateChanged } from "firebase/auth";
 import { useUser } from "../context/userContext"
 
+import { capitalize } from "../utility/stringUtility"
 // const Item = styled(Paper)(({ theme }) => ({
 //     backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
 //     ...theme.typography.h4,
@@ -390,10 +391,7 @@ export default function HomePage(){
     setSharedPods(sharedPods)
   }
 
-  function capitalize(str) {
-    if (!str) return "";
-    return str.charAt(0).toUpperCase() + str.slice(1);
-  }
+
 
   const handleAddClick = () => {
     if(tabIndex == 0){
@@ -514,7 +512,7 @@ export default function HomePage(){
 
   useEffect(() => {
     if(!loading && !user){
-      router.push("/")// no user back to login page
+      router.push("/")// no user, back to login page
     }
   }, [user, loading, router])
 
@@ -539,6 +537,7 @@ export default function HomePage(){
             }));
           // new function
           splitPodsIntoPersonalAndShared(podData)
+          console.log(pod.data)
           // setPods(podData);
         } catch (err) {
           console.error("Error loading pods:", err);
@@ -617,13 +616,13 @@ export default function HomePage(){
             <Box>
               <IconButton
                 sx={{ color: "#2C3E50" }}
-                onClick={() => console.log("Open Inventory", list.id)}
+                onClick={() => router.push(`lists/?id=${pod.pantryListId}&name=${pod.name}&type=${pod.type}`)}
               >
                 <Inventory2Icon />
               </IconButton>
               <IconButton
                 sx={{ color: "#34495E" }}
-                onClick={() => console.log("Open Grocery", list.id)}
+                onClick={() => router.push(`lists/?id=${pod.groceryListId}&name=${pod.name}&type=${pod.type}`)}
               >
                 <ShoppingCartIcon />
               </IconButton>
